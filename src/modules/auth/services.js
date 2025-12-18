@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // URL Backend Auth kamu
-const AUTH_API_URL = "http://localhost:8080";
+const AUTH_API_URL = "/auth-api";
 
 export const loginAPI = async (username, password) => {
   try {

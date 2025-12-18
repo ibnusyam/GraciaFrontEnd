@@ -3,6 +3,7 @@ import LoginPage from "./modules/auth/pages/LoginPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RootRedirect from "./routes/RootRedirect";
 import MainLayout from "./components/Layouts/MainLayout";
+import CSLayout from "./modules/HRD/Pages/CleaningForm";
 
 // 🔥 1. Import Config Routes dari masing-masing module
 import { hrdRoutes } from "./modules/HRD/routes";
@@ -19,7 +20,12 @@ function App() {
         {/* ==================================================== */}
         {/* PROTECTED ROUTES - HRD AREA */}
         {/* ==================================================== */}
-        <Route element={<ProtectedRoute allowedDepartments={["HRD"]} />}>
+        <Route element={<ProtectedRoute allowedDepartments={["HRD", "CS"]} />}>
+          {/* <Route
+            path="/hrd/cleaningform"
+            element={<h1>Halaman Input Cleaning Form (FULLSCREEN)</h1>}
+          /> */}
+          <Route path="/hrd/cleaningform" element={<CSLayout />} />
           <Route element={<MainLayout />}>
             {/* 🔥 2. Looping Route HRD */}
             {hrdRoutes.map((route, index) => (

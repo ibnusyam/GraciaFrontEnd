@@ -1,7 +1,7 @@
 const Navbar = () => {
   const role = localStorage.getItem("userRole");
   // Ambil deptId buat contoh info tambahan (opsional)
-  const deptId = localStorage.getItem("deptId");
+  const userLogin = localStorage.getItem("userLogin");
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-6 z-10">
@@ -15,8 +15,7 @@ const Navbar = () => {
       {/* Right Side: Profile Info */}
       <div className="flex items-center gap-4">
         <div className="text-right hidden sm:block">
-          <p className="text-sm font-medium text-gray-800">User Login</p>
-          <p className="text-xs text-gray-500">Dept ID: {deptId}</p>
+          <p className="text-sm font-medium text-gray-800">{userLogin}</p>
         </div>
 
         {/* Avatar Circle */}

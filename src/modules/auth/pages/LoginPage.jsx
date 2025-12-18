@@ -68,9 +68,18 @@ const LoginPage = () => {
         // Pastikan nama field-nya sesuai dengan struct Claims di Go (biasanya 'dept_id' atau 'DeptID')
         // Kita pakai fallback biar aman (misal backend kirim DeptID atau dept_id)
         const deptIdFromToken = decodedToken.dept_id || decodedToken.DeptID;
+        const userLoginFromToken = decodedToken.sub || decodedToken.sub;
+        const siteIdFromToken = decodedToken.site_id || decodedToken.SiteID;
 
         if (!deptIdFromToken) {
           throw new Error("Dept ID tidak ditemukan dalam token");
+        }
+
+        if (!userLoginFromToken) {
+          throw new Error("User Login tidak ditemukan dalam token");
+        }
+        if (!siteIdFromToken) {
+          throw new Error("User Login tidak ditemukan dalam token");
         }
 
         // 4. Proses Role berdasarkan ID dari Token
@@ -79,6 +88,8 @@ const LoginPage = () => {
         // Simpan info user
         localStorage.setItem("userRole", userRole);
         localStorage.setItem("deptId", deptIdFromToken);
+        localStorage.setItem("userLogin", userLoginFromToken);
+        localStorage.setItem("siteId", siteIdFromToken);
         console.log(userRole);
 
         // 5. Redirect berdasarkan Role
