@@ -1,15 +1,13 @@
-// src/modules/users/hooks/useUsers.js
 import { useState, useEffect, useCallback } from "react";
+import api from "../../../api/axiosInstance";
 
-const API_BASE_URL = "http://localhost:8082";
+const API_BASE_URL = "/produksi-api";
 
 export const useUsers = () => {
-  // --- STATE ---
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // State Modal Create
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -17,31 +15,21 @@ export const useUsers = () => {
     full_name: "",
   });
 
-  // --- API ACTIONS ---
-
-  // 1. Fetch Users
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
+      const response = await api.get(`${API_BASE_URL}/users`);
 
-      if (!response.ok) {
-        console.warn("Gagal mengambil data user, menampilkan state kosong.");
-        setUsers([]);
-        setError(null);
-        return;
-      }
+      const result = response.data.data || response.data;
 
-      const data = await response.json();
-
-      if (Array.isArray(data)) {
-        setUsers(data);
+      if (Array.isArray(result)) {
+        setUsers(result);
       } else {
         setUsers([]);
       }
       setError(null);
     } catch (err) {
-      console.error("Error fetching users:", err);
+      console.error(err);
       setUsers([]);
       setError(null);
     } finally {
@@ -49,7 +37,6 @@ export const useUsers = () => {
     }
   }, []);
 
-  // 2. Delete User
   const handleDelete = async (id) => {
     if (
       !window.confirm(`Apakah Anda yakin ingin menghapus user dengan ID ${id}?`)
@@ -58,23 +45,16 @@ export const useUsers = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/delete/${id}`, {
-        method: "DELETE",
-      });
+      await api.delete(`${API_BASE_URL}/users/${id}`);
 
-      if (response.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-        alert("Pengguna berhasil dihapus!");
-      } else {
-        alert("Gagal menghapus pengguna di server.");
-      }
+      setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== id));
+      alert("Pengguna berhasil dihapus!");
     } catch (err) {
-      console.error("Error deleting user:", err);
+      console.error(err);
       alert("Terjadi kesalahan saat menghubungi server.");
     }
   };
 
-  // 3. Create User
   const handleCreate = async (e) => {
     e.preventDefault();
 
@@ -85,31 +65,29 @@ export const useUsers = () => {
 
     setCreating(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const payload = {
+        username: formData.nik,
+        full_name: formData.full_name,
+        password: "password123",
+        department_id: null,
+        position_id: null,
+        site_id: null,
+      };
 
-      if (response.ok) {
-        alert("Pengguna berhasil dibuat!");
-        setShowModal(false);
-        setFormData({ nik: "", full_name: "" });
-        fetchUsers();
-      } else {
-        alert("Gagal membuat pengguna baru.");
-      }
+      await api.post(`${API_BASE_URL}/users`, payload);
+
+      alert("Pengguna berhasil dibuat!");
+      setShowModal(false);
+      setFormData({ nik: "", full_name: "" });
+      fetchUsers();
     } catch (err) {
-      console.error("Error creating user:", err);
-      alert("Terjadi kesalahan pada server saat membuat pengguna.");
+      console.error(err);
+      alert("Gagal membuat pengguna baru.");
     } finally {
       setCreating(false);
     }
   };
 
-  // --- FORM HANDLERS ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -118,12 +96,10 @@ export const useUsers = () => {
     }));
   };
 
-  // --- EFFECTS ---
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Return data & functions
   return {
     state: {
       users,

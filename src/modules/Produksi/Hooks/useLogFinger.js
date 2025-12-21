@@ -1,13 +1,11 @@
-// src/modules/HRD/hooks/useLogFinger.js
 import { useState, useEffect } from "react";
+import api from "../../../api/axiosInstance";
 
-// --- CONFIG API & UTILS ---
-const API_BASE_URL = "http://localhost:8082";
+const API_BASE_URL = "/produksi-api";
 
 export const useLogFinger = () => {
   const today = new Date().toISOString().split("T")[0];
 
-  // --- STATE ---
   const [tableRows, setTableRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
@@ -49,56 +47,65 @@ export const useLogFinger = () => {
     if (!selectedDate) return;
     setLoading(true);
     try {
-      // Fetch Log Finger
-      const response = await fetch(`${API_BASE_URL}/get`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: selectedDate }),
+      const response = await api.post(`${API_BASE_URL}/get`, {
+        date: selectedDate,
       });
-      if (!response.ok) throw new Error("Gagal mengambil data");
-      const data = await response.json();
+      const data = response.data;
 
-      // Fetch Notes
+      // ... (Bagian Fetch Notes TETAP SAMA) ...
       try {
-        const notesResponse = await fetch(
-          `${API_BASE_URL}/notes?date=${selectedDate}`
-        );
-        if (notesResponse.ok) {
-          const notesData = await notesResponse.json();
-          const notesMap = {};
+        const notesResponse = await api.get(`${API_BASE_URL}/notes`, {
+          params: { date: selectedDate },
+        });
+        const notesData = notesResponse.data;
+        const notesMap = {};
+        if (Array.isArray(notesData)) {
           notesData.forEach((item) => {
             notesMap[item.nik] = item.note;
           });
-          setNotes(notesMap);
         }
+        setNotes(notesMap);
       } catch (err) {
-        console.warn("Gagal fetch notes", err);
+        console.warn(err);
       }
 
-      // Process Data for Table
+      // 🔥 FIX 1: Gunakan (item.timestamps || []) untuk mencegah error null
       const maxScanCount =
         data.length > 0
-          ? Math.max(...data.map((item) => item.timestamps.length))
+          ? Math.max(...data.map((item) => (item.timestamps || []).length))
           : 0;
+
       let calculatedPairs = Math.max(8, Math.ceil(maxScanCount / 2));
       setTotalPairs(calculatedPairs);
 
       const formattedData = data.map((item, index) => {
         const rowData = [];
+
+        // 🔥 FIX 2: Pastikan timestamps aman
+        const safeTimestamps = item.timestamps || [];
+
         for (let i = 0; i < calculatedPairs; i++) {
           const tsIndexMasuk = i * 2;
           const tsIndexKeluar = i * 2 + 1;
           const tsIndexNextMasuk = (i + 1) * 2;
 
-          const timeMasuk = item.timestamps[tsIndexMasuk];
-          const timeKeluar = item.timestamps[tsIndexKeluar];
-          const timeNextMasuk = item.timestamps[tsIndexNextMasuk];
+          const rawTimeMasuk = safeTimestamps[tsIndexMasuk];
+          const rawTimeKeluar = safeTimestamps[tsIndexKeluar];
+          const rawTimeNextMasuk = safeTimestamps[tsIndexNextMasuk];
 
-          rowData.push(formatTime(timeMasuk));
-          rowData.push(formatTime(timeKeluar));
+          rowData.push(
+            rawTimeMasuk
+              ? { display: formatTime(rawTimeMasuk), original: rawTimeMasuk }
+              : null
+          );
+          rowData.push(
+            rawTimeKeluar
+              ? { display: formatTime(rawTimeKeluar), original: rawTimeKeluar }
+              : null
+          );
 
-          if (timeKeluar && timeNextMasuk) {
-            rowData.push(calculateDuration(timeKeluar, timeNextMasuk));
+          if (rawTimeKeluar && rawTimeNextMasuk) {
+            rowData.push(calculateDuration(rawTimeKeluar, rawTimeNextMasuk));
           } else {
             rowData.push("");
           }
@@ -112,37 +119,35 @@ export const useLogFinger = () => {
       });
       setTableRows(formattedData);
     } catch (error) {
-      console.error(error);
       setTableRows([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Delete Log
-  const handleDeleteLog = async (nik, timeString) => {
-    if (!nik || !timeString || timeString === "-" || timeString === "") return;
+  const handleDeleteLog = async (nik, logData) => {
+    // logData.original isinya: "2025-11-27 17:18:23.838 +0700" (String mentah dari DB)
+    if (!nik || !logData || !logData.original) return;
+
     const confirmDelete = window.confirm(
-      `Hapus log jam ${timeString} untuk NIK ${nik}?`
+      `Hapus log jam ${logData.display} untuk NIK ${nik}?`
     );
     if (!confirmDelete) return;
 
     try {
-      const timestamp = `${selectedDate} ${timeString}:00`;
-      const response = await fetch(`${API_BASE_URL}/remove`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nik, timestamp }),
+      // 🔥 CHANGE: Jangan format manual lagi! Kirim string asli saja.
+      // Backend Go sudah kita update untuk menerima format detail ini.
+      const rawTimestamp = logData.original;
+
+      await api.post(`${API_BASE_URL}/remove`, {
+        nik,
+        timestamp: rawTimestamp,
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Gagal menghapus data");
-      }
       alert("Data berhasil dihapus");
       handleSearch();
     } catch (error) {
-      alert(`Gagal hapus: ${error.message}`);
+      alert(`Gagal hapus: ${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -150,14 +155,10 @@ export const useLogFinger = () => {
   const handleNoteBlur = async (nik) => {
     const noteContent = notes[nik];
     try {
-      await fetch(`${API_BASE_URL}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: selectedDate,
-          nik: nik,
-          note: noteContent,
-        }),
+      await api.post(`${API_BASE_URL}/notes`, {
+        date: selectedDate,
+        nik: nik,
+        note: noteContent,
       });
     } catch (error) {
       console.error("Gagal menyimpan catatan:", error);
@@ -173,31 +174,24 @@ export const useLogFinger = () => {
     }
     setIsSubmitting(true);
     try {
+      // Manual input biasanya detik 00
       const timestamp = `${manualForm.date} ${manualForm.time}:00`;
-      const response = await fetch(`${API_BASE_URL}/insert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nik: manualForm.nik,
-          timestamp: timestamp,
-        }),
+      await api.post(`${API_BASE_URL}/insert`, {
+        nik: manualForm.nik,
+        timestamp: timestamp,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Gagal insert data");
-      }
       alert("Data berhasil ditambahkan!");
       setIsModalOpen(false);
       handleSearch();
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error.response?.data?.message || error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 5. Export PDF (Logic Only)
+  // 5. Export PDF
   const loadScript = (src) => {
     return new Promise((resolve, reject) => {
       if (document.querySelector(`script[src="${src}"]`)) {
@@ -229,7 +223,6 @@ export const useLogFinger = () => {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF("l", "mm", "a4");
 
-      // LOGIC PENGATURAN KOLOM DAN HEADER PDF ASLI DI SINI:
       const totalTableColumns = totalPairs * 3;
       let dynamicColumnStyles = {
         0: { cellWidth: 7, halign: "center" },
@@ -308,9 +301,17 @@ export const useLogFinger = () => {
           styles: { halign: "center", fontSize: 6, fillColor: [250, 250, 250] },
         });
       }
+
       const body = [];
       tableRows.forEach((row) => {
-        body.push([row.no, row.nik, row.nama, ...row.logs]);
+        // 🔥 PDF FIX: Extract display string from object
+        const cleanLogs = row.logs.map((log) => {
+          if (log && typeof log === "object") return log.display;
+          return log || "";
+        });
+
+        body.push([row.no, row.nik, row.nama, ...cleanLogs]);
+
         const noteText = notes[row.nik] || "";
         if (noteText.trim() !== "") {
           body.push([
@@ -328,7 +329,6 @@ export const useLogFinger = () => {
           ]);
         }
       });
-      // AKHIR LOGIC PDF
 
       doc.autoTable({
         head: head,
@@ -357,7 +357,7 @@ export const useLogFinger = () => {
     }
   };
 
-  // --- EVENT HANDLERS (Non-API) ---
+  // --- EVENTS ---
   const handleNoteChange = (nik, value) => {
     setNotes((prev) => ({ ...prev, [nik]: value }));
   };
@@ -382,7 +382,6 @@ export const useLogFinger = () => {
     setManualForm((prev) => ({ ...prev, time: `${h}:${m}` }));
   };
 
-  // --- EFFECTS ---
   useEffect(() => {
     setNotes({});
     setManualForm((prev) => ({ ...prev, date: selectedDate }));
@@ -391,9 +390,8 @@ export const useLogFinger = () => {
   useEffect(() => {
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Initial load
+  }, []);
 
-  // Return semua yang dibutuhkan UI
   return {
     state: {
       tableRows,

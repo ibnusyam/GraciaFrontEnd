@@ -1,4 +1,3 @@
-// src/modules/HRD/cleaninglogs.jsx (atau LogFinger.jsx)
 import { Fragment } from "react";
 import {
   MagnifyingGlassIcon,
@@ -28,7 +27,6 @@ const POS_NIK = "50px";
 const POS_NAMA = "150px";
 
 export function LogFinger() {
-  // Panggil Logic dari Hook
   const { state, actions } = useLogFinger();
   const {
     tableRows,
@@ -242,12 +240,30 @@ export function LogFinger() {
                             <p className="text-sm truncate px-2">{nama}</p>
                           </td>
 
-                          {logs.map((log, logIndex) => {
+                          {logs.map((logData, logIndex) => {
                             const isIntervalCol = (logIndex + 1) % 3 === 0;
                             const colWidth = isIntervalCol
                               ? WIDTH_DURATION
                               : WIDTH_TIME;
-                            const isClickable = !isIntervalCol && log !== "";
+
+                            // 🔥 DATA HANDLING UPDATE: Cek apakah Object atau String
+                            let displayText = "";
+                            let isClickable = false;
+
+                            if (isIntervalCol) {
+                              // Kolom Interval/Durasi (masih String dari perhitungan)
+                              displayText = logData;
+                              isClickable = false;
+                            } else {
+                              // Kolom Jam Masuk/Keluar (bisa Object {display, original} atau null)
+                              if (logData && logData.display) {
+                                displayText = logData.display;
+                                isClickable = true;
+                              } else {
+                                displayText = "";
+                                isClickable = false;
+                              }
+                            }
 
                             return (
                               <td
@@ -261,10 +277,10 @@ export function LogFinger() {
                                 }`}
                                 style={{ width: colWidth, minWidth: colWidth }}
                                 onClick={() =>
-                                  isClickable && handleDeleteLog(nik, log)
+                                  isClickable && handleDeleteLog(nik, logData)
                                 }
                                 title={
-                                  isClickable ? "Klik untuk menghapus" : ""
+                                  isClickable ? `Hapus log: ${displayText}` : ""
                                 }
                               >
                                 <p
@@ -274,7 +290,7 @@ export function LogFinger() {
                                       : "text-blue-gray-900"
                                   }`}
                                 >
-                                  {log}
+                                  {displayText}
                                 </p>
                                 {isClickable && (
                                   <span className="hidden group-hover:block absolute top-0 right-0 p-0.5 text-red-500 bg-white/80 rounded-bl">
