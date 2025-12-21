@@ -8,6 +8,7 @@ const MonthlyCleaningReport = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedType, setSelectedType] = useState("");
 
   const daysInMonth = useMemo(() => {
     const date = new Date(selectedYear, selectedMonth, 0);
@@ -23,8 +24,13 @@ const MonthlyCleaningReport = () => {
 
   const matrixData = useMemo(() => {
     const allLocations = filterOptions.locations || [];
+    const filteredLocations = selectedType
+      ? allLocations.filter(
+          (loc) => String(loc.location_type_id) === String(selectedType)
+        )
+      : allLocations;
 
-    return allLocations.map((loc) => {
+    return filteredLocations.map((loc) => {
       const row = {
         location_id: loc.location_id,
         location_name: loc.location_name,
@@ -50,7 +56,7 @@ const MonthlyCleaningReport = () => {
 
       return row;
     });
-  }, [filterOptions.locations, logs]);
+  }, [filterOptions.locations, logs, selectedType]);
 
   const months = [
     "Januari",
@@ -82,7 +88,21 @@ const MonthlyCleaningReport = () => {
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 min-w-[150px]"
+            >
+              <option value="">Semua Tipe</option>
+              {filterOptions.types &&
+                filterOptions.types.map((t) => (
+                  <option key={t.location_type_id} value={t.location_type_id}>
+                    {t.type_name}
+                  </option>
+                ))}
+            </select>
+
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
@@ -112,6 +132,10 @@ const MonthlyCleaningReport = () => {
           {loading ? (
             <div className="p-10 text-center text-gray-500">
               Memuat data rekap...
+            </div>
+          ) : matrixData.length === 0 ? (
+            <div className="p-10 text-center text-gray-500">
+              Tidak ada lokasi ditemukan untuk filter ini.
             </div>
           ) : (
             <div className="overflow-x-auto">
