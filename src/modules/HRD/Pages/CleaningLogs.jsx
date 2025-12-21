@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useCleaningLogs } from "../Hooks/useCleaningLogs";
 
 const CleaningLogTable = () => {
+  // 1. Panggil Logic dari Hook
   const { state, actions } = useCleaningLogs();
   const { logs, meta, filterOptions, loading, error } = state;
   const {
@@ -13,39 +14,36 @@ const CleaningLogTable = () => {
     calculateDuration,
   } = actions;
 
+  // --- HELPER DATE ---
+  const getCurrentMonth = () => {
+    const month = new Date().getMonth() + 1;
+    return month < 10 ? `0${month}` : `${month}`;
+  };
+
+  // 2. State UI
+  const [filterMonth, setFilterMonth] = useState(getCurrentMonth());
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [searchCleaner, setSearchCleaner] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [filterMonth, setFilterMonth] = useState("");
-  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  // --- LOGIC FILTER DROPDOWN (View Logic) ---
+  const filteredLocations = useMemo(() => {
+    const allLocations = filterOptions.locations || [];
+    if (!selectedType) return allLocations;
+    return allLocations.filter(
+      (loc) => String(loc.location_type_id) === String(selectedType)
+    );
+  }, [selectedType, filterOptions.locations]);
 
-  const months = [
-    { value: "01", label: "Januari" },
-    { value: "02", label: "Februari" },
-    { value: "03", label: "Maret" },
-    { value: "04", label: "April" },
-    { value: "05", label: "Mei" },
-    { value: "06", label: "Juni" },
-    { value: "07", label: "Juli" },
-    { value: "08", label: "Agustus" },
-    { value: "09", label: "September" },
-    { value: "10", label: "Oktober" },
-    { value: "11", label: "November" },
-    { value: "12", label: "Desember" },
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const years = Array.from(
-    { length: 5 },
-    (_, i) => currentYear - i + 1
-  ).reverse();
-
+  // --- EFFECT: Trigger Fetch Data ---
   useEffect(() => {
     let dateParam = "";
-    if (filterMonth && filterYear) {
-      dateParam = `${filterYear}-${filterMonth}`;
+    if (filterYear) {
+      dateParam = filterMonth
+        ? `${filterYear}-${filterMonth}`
+        : `${filterYear}`;
     }
 
     const timer = setTimeout(() => {
@@ -69,11 +67,39 @@ const CleaningLogTable = () => {
     fetchData,
   ]);
 
+  // --- FILTER SAFETY NET (CLIENT SIDE) ---
+  // Penjelasan: Ini adalah filter "paksa" di sisi tampilan.
+  // Meskipun API mengembalikan data Toilet, jika selectedType adalah Locker,
+  // maka data Toilet akan dibuang di sini sebelum di-render.
+  const displayedLogs = logs.filter((log) => {
+    // 1. Safety check untuk Type
+    if (selectedType) {
+      // Pastikan log punya location_type_id, jika tidak ada kita loloskan saja (atau hide)
+      if (
+        log.location_type_id &&
+        String(log.location_type_id) !== String(selectedType)
+      ) {
+        return false;
+      }
+    }
+    // 2. Safety check untuk Location (Opsional tapi bagus untuk konsistensi)
+    if (selectedLocation) {
+      if (
+        log.location_id &&
+        String(log.location_id) !== String(selectedLocation)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  // --- HANDLER: Reset Filter ---
   const handleResetFilter = () => {
     setSelectedLocation("");
     setSelectedType("");
     setSearchCleaner("");
-    setFilterMonth("");
+    setFilterMonth(getCurrentMonth());
     setFilterYear(new Date().getFullYear());
     setCurrentPage(1);
   };
@@ -93,9 +119,31 @@ const CleaningLogTable = () => {
     });
   };
 
+  const months = [
+    { value: "01", label: "Januari" },
+    { value: "02", label: "Februari" },
+    { value: "03", label: "Maret" },
+    { value: "04", label: "April" },
+    { value: "05", label: "Mei" },
+    { value: "06", label: "Juni" },
+    { value: "07", label: "Juli" },
+    { value: "08", label: "Agustus" },
+    { value: "09", label: "September" },
+    { value: "10", label: "Oktober" },
+    { value: "11", label: "November" },
+    { value: "12", label: "Desember" },
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from(
+    { length: 5 },
+    (_, i) => currentYear - i + 1
+  ).reverse();
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
+        {/* HEADER & RESET */}
         <div className="mb-6 flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <div>
@@ -108,12 +156,13 @@ const CleaningLogTable = () => {
             </div>
             <button
               onClick={handleResetFilter}
-              className="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+              className="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 transition"
             >
               Reset Filter
             </button>
           </div>
 
+          {/* FILTER SECTION */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <input
               type="text"
@@ -123,7 +172,7 @@ const CleaningLogTable = () => {
                 setSearchCleaner(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             />
 
             <select
@@ -132,9 +181,8 @@ const CleaningLogTable = () => {
                 setFilterMonth(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             >
-              <option value="">Semua Bulan</option>
               {months.map((m) => (
                 <option key={m.value} value={m.value}>
                   {m.label}
@@ -148,7 +196,7 @@ const CleaningLogTable = () => {
                 setFilterYear(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             >
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -157,39 +205,52 @@ const CleaningLogTable = () => {
               ))}
             </select>
 
+            {/* SELECT TYPE */}
             <select
               value={selectedType}
               onChange={(e) => {
                 setSelectedType(e.target.value);
+                setSelectedLocation(""); // Reset Location saat Type berubah
                 setCurrentPage(1);
               }}
-              className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             >
               <option value="">Semua Tipe</option>
-              {filterOptions.types.map((type) => (
-                <option
-                  key={type.location_type_id}
-                  value={type.location_type_id}
-                >
-                  {type.type_name}
-                </option>
-              ))}
+              {filterOptions.types && filterOptions.types.length > 0 ? (
+                filterOptions.types.map((type) => (
+                  <option
+                    key={type.location_type_id}
+                    value={type.location_type_id}
+                  >
+                    {type.type_name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Loading...</option>
+              )}
             </select>
 
+            {/* SELECT LOCATION */}
             <select
               value={selectedLocation}
               onChange={(e) => {
                 setSelectedLocation(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             >
               <option value="">Semua Lokasi</option>
-              {filterOptions.locations.map((loc) => (
-                <option key={loc.location_id} value={loc.location_id}>
-                  {loc.location_name}
+              {filteredLocations.length > 0 ? (
+                filteredLocations.map((loc) => (
+                  <option key={loc.location_id} value={loc.location_id}>
+                    {loc.location_name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>
+                  {selectedType ? "Tidak ada lokasi tipe ini" : "Loading..."}
                 </option>
-              ))}
+              )}
             </select>
           </div>
         </div>
@@ -230,7 +291,8 @@ const CleaningLogTable = () => {
                       </div>
                     </td>
                   </tr>
-                ) : logs.length === 0 ? (
+                ) : displayedLogs.length === 0 ? (
+                  // GANTI 'logs.length' DENGAN 'displayedLogs.length'
                   <tr>
                     <td
                       colSpan="10"
@@ -240,7 +302,8 @@ const CleaningLogTable = () => {
                     </td>
                   </tr>
                 ) : (
-                  logs.map((log) => (
+                  // LOOPING MENGGUNAKAN 'displayedLogs' BUKAN 'logs'
+                  displayedLogs.map((log) => (
                     <tr
                       key={log.log_id}
                       className="hover:bg-gray-50 transition"
@@ -268,47 +331,40 @@ const CleaningLogTable = () => {
                       <td className="px-6 py-4 whitespace-nowrap font-semibold text-gray-700">
                         {calculateDuration(log.start_time, log.end_time)}
                       </td>
-
                       <td className="px-6 py-4 text-center">
                         {getImageUrl(log.image_before_url) ? (
                           <a
                             href={getImageUrl(log.image_before_url)}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-block"
                           >
                             <img
                               src={getImageUrl(log.image_before_url)}
                               alt="Before"
                               className="h-12 w-12 object-cover rounded border hover:scale-150 transition bg-white"
-                              title="Foto Sebelum"
                             />
                           </a>
                         ) : (
                           <span className="text-xs text-gray-400">N/A</span>
                         )}
                       </td>
-
                       <td className="px-6 py-4 text-center">
                         {getImageUrl(log.image_after_url) ? (
                           <a
                             href={getImageUrl(log.image_after_url)}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-block"
                           >
                             <img
                               src={getImageUrl(log.image_after_url)}
                               alt="After"
                               className="h-12 w-12 object-cover rounded border hover:scale-150 transition bg-white"
-                              title="Foto Sesudah"
                             />
                           </a>
                         ) : (
                           <span className="text-xs text-gray-400">N/A</span>
                         )}
                       </td>
-
                       <td
                         className="px-6 py-4 max-w-xs truncate"
                         title={getNullString(log.notes)}
@@ -331,14 +387,14 @@ const CleaningLogTable = () => {
               <button
                 onClick={() => handlePageChange(meta.current_page - 1)}
                 disabled={meta.current_page === 1 || loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-l hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-l hover:bg-blue-700 disabled:bg-gray-300"
               >
                 Prev
               </button>
               <button
                 onClick={() => handlePageChange(meta.current_page + 1)}
                 disabled={meta.current_page === meta.total_pages || loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-r border-0 border-l border-blue-700 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-r border-0 border-l border-blue-700 hover:bg-blue-700 disabled:bg-gray-300"
               >
                 Next
               </button>

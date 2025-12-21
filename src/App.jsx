@@ -3,11 +3,12 @@ import LoginPage from "./modules/auth/pages/LoginPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RootRedirect from "./routes/RootRedirect";
 import MainLayout from "./components/Layouts/MainLayout";
-import CSLayout from "./modules/HRD/Pages/CleaningForm";
+import CSLayout from "./modules/CS/Pages/CleaningForm";
 
 // 🔥 1. Import Config Routes dari masing-masing module
 import { hrdRoutes } from "./modules/HRD/routes";
 import { produksiRoutes } from "./modules/Produksi/routes";
+import { itRoutes } from "./modules/IT/routes";
 // import { csRoutes } from "./modules/CS/routes";
 
 function App() {
@@ -18,32 +19,44 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
 
         {/* ==================================================== */}
+        {/* PROTECTED ROUTES - IT AREA */}
+        {/* ==================================================== */}
+        <Route element={<ProtectedRoute allowedDepartments={["IT"]} />}>
+          <Route element={<MainLayout />}>
+            {itRoutes.map((route, index) => (
+              <Route key={index} path={route.path} element={route.element} />
+            ))}
+          </Route>
+        </Route>
+        {/* ==================================================== */}
+        {/* PROTECTED ROUTES - CS */}
+        {/* ==================================================== */}
+        <Route element={<ProtectedRoute allowedDepartments={["CS"]} />}>
+          <Route path="/hrd/cleaningform" element={<CSLayout />} />
+        </Route>
+
+        {/* ==================================================== */}
         {/* PROTECTED ROUTES - HRD AREA */}
         {/* ==================================================== */}
-        <Route element={<ProtectedRoute allowedDepartments={["HRD", "CS"]} />}>
-          {/* <Route
-            path="/hrd/cleaningform"
-            element={<h1>Halaman Input Cleaning Form (FULLSCREEN)</h1>}
-          /> */}
-          <Route path="/hrd/cleaningform" element={<CSLayout />} />
+        <Route element={<ProtectedRoute allowedDepartments={["HRD"]} />}>
           <Route element={<MainLayout />}>
-            {/* 🔥 2. Looping Route HRD */}
             {hrdRoutes.map((route, index) => (
               <Route key={index} path={route.path} element={route.element} />
             ))}
           </Route>
         </Route>
 
+        {/* ==================================================== */}
+        {/* PROTECTED ROUTES - Produksi AREA */}
+        {/* ==================================================== */}
         <Route element={<ProtectedRoute allowedDepartments={["PRODUKSI"]} />}>
           <Route element={<MainLayout />}>
-            {/* 🔥 2. Looping Route HRD */}
             {produksiRoutes.map((route, index) => (
               <Route key={index} path={route.path} element={route.element} />
             ))}
           </Route>
         </Route>
 
-        {/* ROOT & 404 */}
         <Route path="/" element={<RootRedirect />} />
 
         <Route

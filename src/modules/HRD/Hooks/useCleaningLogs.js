@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import api from "../../../api/axiosInstance"; // Gunakan instance Axios kita
 
 const API_BASE_URL = "/hrd-api";
 
@@ -37,23 +38,15 @@ const getImageUrl = (path) => {
 
 const calculateDuration = (startTime, endTimeObj) => {
   if (!startTime || !endTimeObj || !endTimeObj.Valid) return "-";
-
   const start = new Date(startTime);
   const end = new Date(endTimeObj.Time);
-
   if (isNaN(start.getTime()) || isNaN(end.getTime())) return "-";
-
   const diffMs = end - start;
-
   if (diffMs < 0) return "-";
-
   const diffMinutes = Math.floor(diffMs / 60000);
   const hours = Math.floor(diffMinutes / 60);
   const minutes = diffMinutes % 60;
-
-  if (hours > 0) {
-    return `${hours} jam ${minutes} menit`;
-  }
+  if (hours > 0) return `${hours} jam ${minutes} menit`;
   return `${minutes} menit`;
 };
 
@@ -68,21 +61,24 @@ export const useCleaningLogs = () => {
     locations: [],
     types: [],
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchFilterOptions = useCallback(async () => {
+    const siteId = localStorage.getItem("siteId");
+    if (!siteId) return;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/form-options`);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.data) {
-          setFilterOptions({
-            locations: result.data.locations || [],
-            types: result.data.location_types || [],
-          });
-        }
-      }
+      // 🔥 HIT API: Ambil Opsi Filter (GET)
+      const response = await api.get(`${API_BASE_URL}/form-options`, {
+        params: { site_id: siteId },
+      });
+
+      const result = response.data;
+      setFilterOptions({
+        locations: result.locations || [],
+        types: result.location_types || [],
+      });
     } catch (err) {
       console.error(err);
     }
@@ -94,7 +90,8 @@ export const useCleaningLogs = () => {
       typeId = "",
       page = 1,
       cleanerName = "",
-      date = ""
+      date = "",
+      limit = 10
     ) => {
       setLoading(true);
       setError(null);
@@ -108,33 +105,27 @@ export const useCleaningLogs = () => {
       }
 
       try {
-        const params = new URLSearchParams();
-        params.append("site_id", siteId);
+        // 🔥 HIT API: Ambil Logs Data (GET)
+        // Axios otomatis mengubah object params menjadi query string (?site_id=...&limit=...)
+        const response = await api.get(`${API_BASE_URL}/logs`, {
+          params: {
+            site_id: siteId,
+            location_id: locationId,
+            location_type_id: typeId,
+            cleaner_name: cleanerName,
+            date: date,
+            page: page,
+            limit: limit,
+          },
+        });
 
-        if (locationId) params.append("location_id", locationId);
-        if (typeId) params.append("type_id", typeId);
-        if (cleanerName) params.append("cleaner_name", cleanerName);
-        if (date) params.append("date", date);
-
-        params.append("page", page);
-        params.append("limit", 10);
-
-        const response = await fetch(
-          `${API_BASE_URL}/logs?${params.toString()}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Gagal mengambil data dari server");
-        }
-
-        const result = await response.json();
-
+        const result = response.data;
         setLogs(result.data || []);
         setMeta(
           result.meta || { current_page: 1, total_pages: 1, total_records: 0 }
         );
       } catch (err) {
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
       }
@@ -144,18 +135,10 @@ export const useCleaningLogs = () => {
 
   useEffect(() => {
     fetchFilterOptions();
-    fetchData();
-  }, [fetchFilterOptions, fetchData]);
+  }, [fetchFilterOptions]);
 
   return {
-    state: {
-      logs,
-      meta,
-      filterOptions,
-      loading,
-      error,
-      API_BASE_URL,
-    },
+    state: { logs, meta, filterOptions, loading, error, API_BASE_URL },
     actions: {
       fetchData,
       formatTime: formatTimeOnly,

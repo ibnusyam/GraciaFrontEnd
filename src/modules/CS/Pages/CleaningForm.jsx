@@ -280,7 +280,7 @@ export function CleaningForm() {
                 onChange={(date) => handleDateChange(date, "start_time")}
                 showTimeSelect
                 timeFormat="HH:mm"
-                timeIntervals={15}
+                timeIntervals={1}
                 dateFormat="dd/MM/yyyy HH:mm"
                 placeholderText="Pilih waktu mulai"
                 required
@@ -300,7 +300,7 @@ export function CleaningForm() {
                 onChange={(date) => handleDateChange(date, "end_time")}
                 showTimeSelect
                 timeFormat="HH:mm"
-                timeIntervals={15}
+                timeIntervals={1}
                 dateFormat="dd/MM/yyyy HH:mm"
                 placeholderText="Pilih waktu selesai"
                 required

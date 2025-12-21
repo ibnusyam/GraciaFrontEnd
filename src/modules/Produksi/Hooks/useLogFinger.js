@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 // --- CONFIG API & UTILS ---
-const API_BASE_URL = "/auth-api";
+const API_BASE_URL = "http://localhost:8082";
 
 export const useLogFinger = () => {
   const today = new Date().toISOString().split("T")[0];

@@ -1,17 +1,19 @@
-// src/modules/auth/services.js
 import axios from "axios";
 
-// URL Backend Auth kamu
+// URL Backend Auth
 const AUTH_API_URL = "/auth-api";
 
 export const loginAPI = async (username, password) => {
   try {
     const response = await axios.post(`${AUTH_API_URL}/login`, {
-      username: username,
-      password: password,
+      username,
+      password,
     });
-    return response.data;
+    return response.data; // Mengembalikan full response object dari backend
   } catch (error) {
-    throw error.response ? error.response.data : new Error("Network Error");
+    // Tangkap error response dari server atau network error
+    const message =
+      error.response?.data?.message || "Terjadi kesalahan pada koneksi server.";
+    throw new Error(message);
   }
 };

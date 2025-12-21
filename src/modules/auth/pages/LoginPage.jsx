@@ -1,42 +1,51 @@
-// src/modules/auth/pages/LoginPage.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { loginAPI } from "../services";
-import { jwtDecode } from "jwt-decode"; // 🔥 1. IMPORT LIBRARY INI
+
+const ROLE_MAPPING = {
+  1: "IT",
+  2: "HRD",
+  4: "CS",
+  5: "PRODUKSI",
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- MAPPING DEPARTEMEN ---
-  const mapDeptIdToRole = (id) => {
-    const deptId = parseInt(id);
-    console.log("Dept ID untuk mapping:", deptId);
+  const getRoleByDeptId = (id) => {
+    const deptId = parseInt(id, 10);
+    return ROLE_MAPPING[deptId] || "USER";
+  };
 
-    switch (deptId) {
-      case 1:
-        return "IT";
-      case 2:
-        return "HRD";
-      case 4:
-        return "CS";
-      case 5:
-        return "PRODUKSI";
-      default:
-        return "USER";
+  // --- FUNGSI SIMPAN DATA ---
+  // Fungsi ini HANYA dipanggil setelah data (userData) sudah siap/terdecode
+  const saveAuthData = (accessToken, refreshToken, userData) => {
+    // 1. Simpan Token di Cookies
+    const cookieOptions = {
+      secure: window.location.protocol === "https:",
+      sameSite: "Strict",
+      expires: 1,
+    };
+    Cookies.set("accessToken", accessToken, cookieOptions);
+    Cookies.set("refreshToken", refreshToken, { ...cookieOptions, expires: 7 });
+
+    // 2. Simpan Info User di LocalStorage
+    // Pastikan userData tidak undefined sebelum disimpan
+    if (userData) {
+      localStorage.setItem("userRole", String(userData.role || ""));
+      localStorage.setItem("siteId", String(userData.siteId || ""));
+      localStorage.setItem("deptId", String(userData.deptId || ""));
+      localStorage.setItem("userLogin", String(userData.username || ""));
     }
   };
 
@@ -46,86 +55,64 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      // 1. Panggil API Login
+      // 1. REQUEST LOGIN
       const apiResponse = await loginAPI(formData.username, formData.password);
-      console.log("Response Server:", apiResponse);
 
-      const responseData = apiResponse?.data;
+      const payload = apiResponse?.data || apiResponse;
+      const { access_token, refresh_token } = payload;
 
-      // Cek apakah access_token ada
-      if (responseData && responseData.access_token) {
-        // 2. Simpan Token ke LocalStorage
-        localStorage.setItem("accessToken", responseData.access_token);
-        localStorage.setItem("refreshToken", responseData.refresh_token);
-
-        // 🔥 3. DECODE TOKEN UNTUK DAPAT DEPT_ID
-        // Kita bongkar isi tokennya di sini
-        const decodedToken = jwtDecode(responseData.access_token);
-
-        console.log("Isi Token (Decoded):", decodedToken); // Cek console untuk lihat nama field aslinya
-
-        // Ambil dept_id dari token.
-        // Pastikan nama field-nya sesuai dengan struct Claims di Go (biasanya 'dept_id' atau 'DeptID')
-        // Kita pakai fallback biar aman (misal backend kirim DeptID atau dept_id)
-        const deptIdFromToken = decodedToken.dept_id || decodedToken.DeptID;
-        const userLoginFromToken = decodedToken.sub || decodedToken.sub;
-        const siteIdFromToken = decodedToken.site_id || decodedToken.SiteID;
-
-        if (!deptIdFromToken) {
-          throw new Error("Dept ID tidak ditemukan dalam token");
-        }
-
-        if (!userLoginFromToken) {
-          throw new Error("User Login tidak ditemukan dalam token");
-        }
-        if (!siteIdFromToken) {
-          throw new Error("User Login tidak ditemukan dalam token");
-        }
-
-        // 4. Proses Role berdasarkan ID dari Token
-        const userRole = mapDeptIdToRole(deptIdFromToken);
-
-        // Simpan info user
-        localStorage.setItem("userRole", userRole);
-        localStorage.setItem("deptId", deptIdFromToken);
-        localStorage.setItem("userLogin", userLoginFromToken);
-        localStorage.setItem("siteId", siteIdFromToken);
-        console.log(userRole);
-
-        // 5. Redirect berdasarkan Role
-        switch (userRole) {
-          case "IT":
-            navigate("/it/dashboard");
-            break;
-          case "HRD":
-            navigate("/hrd/dashboard");
-            break;
-          case "CS":
-            navigate("/hrd/cleaningform");
-            break;
-          case "PRODUKSI":
-            navigate("/produksi/dashboard");
-            break;
-          default:
-            navigate("/");
-        }
-      } else {
-        setError("Login gagal: Token tidak diterima dari server.");
+      if (!access_token) {
+        throw new Error("Token tidak diterima dari server.");
       }
+
+      // 2. DECODE TOKEN (DILAKUKAN DI SINI SEBELUM MENYIMPAN)
+      const decoded = jwtDecode(access_token);
+      console.log("Decoded Token:", decoded);
+
+      // 3. EKSTRAKSI DATA DARI TOKEN
+      const deptId = decoded.dept_id || decoded.DeptID;
+      const siteId = decoded.site_id || decoded.SiteID;
+      const username = decoded.sub || decoded.username || decoded.name;
+
+      // Validasi kelengkapan data token
+      if (!deptId || !siteId) {
+        throw new Error(
+          "Data User (DeptID/SiteID) tidak lengkap di dalam token."
+        );
+      }
+
+      // 4. TENTUKAN ROLE
+      const userRole = getRoleByDeptId(deptId);
+
+      // 5. BARU SIMPAN KE LOCAL STORAGE (Setelah semua variabel di atas terisi)
+      saveAuthData(access_token, refresh_token, {
+        role: userRole, // Ini hasil dari langkah 4
+        siteId: siteId, // Ini hasil dari langkah 3
+        deptId: deptId, // Ini hasil dari langkah 3
+        username: username || formData.username,
+      });
+
+      console.log("Data Auth Tersimpan. Role:", userRole);
+
+      // 6. REDIRECT
+      const routes = {
+        IT: "/it/dashboard",
+        HRD: "/hrd/dashboard",
+        CS: "/hrd/cleaningform",
+        PRODUKSI: "/produksi/dashboard",
+      };
+
+      navigate(routes[userRole] || "/");
     } catch (err) {
       console.error(err);
-      if (err.response && err.response.data) {
-        setError(err.response.data.message || "Username atau Password salah.");
-      } else {
-        setError("Terjadi kesalahan sistem atau format token salah.");
-      }
+      setError(err.message || "Login gagal.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-800">Gracia Pharmindo</h1>

@@ -1,12 +1,12 @@
-// src/routes/RootRedirect.jsx
 import { Navigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const RootRedirect = () => {
-  // Ubah key menjadi 'accessToken' sesuai yang disimpan di Login Page
-  const token = localStorage.getItem("accessToken");
+  const token = Cookies.get("accessToken");
+
+  // Ambil role dari LocalStorage
   const role = localStorage.getItem("userRole");
 
-  // 1. Jika tidak ada access token, lempar ke login
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -22,7 +22,6 @@ const RootRedirect = () => {
     case "PRODUKSI":
       return <Navigate to="/produksi/dashboard" replace />;
     default:
-      // Jika login tapi role tidak dikenali
       return <Navigate to="/login" replace />;
   }
 };

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "../../../api/axiosInstance"; // Gunakan instance Axios kita
 
-// Sesuaikan URL Backend kamu (sama dengan konfigurasi form kamu)
 const API_BASE_URL = "/hrd-api";
 
 export const useCleanerPerformance = (siteId) => {
@@ -34,8 +33,8 @@ export const useCleanerPerformance = (siteId) => {
     setLoading(true);
     setError(null);
     try {
-      // Menggunakan endpoint /dashboard/stats sesuai route Go yang kita buat
-      const res = await axios.get(`${API_BASE_URL}/dashboard/stats`, {
+      // 🔥 HIT API: Dashboard Stats (GET)
+      const res = await api.get(`${API_BASE_URL}/dashboard/stats`, {
         params: {
           site_id: siteId,
           month: filter.month,
@@ -56,13 +55,11 @@ export const useCleanerPerformance = (siteId) => {
     loadData();
   }, [loadData]);
 
-  // Actions untuk mengubah filter
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilter((prev) => ({ ...prev, [name]: parseInt(value) }));
   };
 
-  // Helper kalkulasi total
   const totals = {
     logs: cleaners.reduce((a, b) => a + (b.total_logs || 0), 0),
     minutes: cleaners.reduce((a, b) => a + (b.total_minutes || 0), 0),

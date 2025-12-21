@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import imageCompression from "browser-image-compression";
+import api from "../../../api/axiosInstance"; // Gunakan instance Axios kita
 
 const API_BASE_URL = "/hrd-api";
 
@@ -24,13 +25,21 @@ export const useCleaningForm = () => {
 
   useEffect(() => {
     const fetchOptions = async () => {
+      const siteId = localStorage.getItem("siteId");
+
+      if (!siteId) return;
+
       try {
-        const response = await fetch(`${API_BASE_URL}/form-options`);
-        const result = await response.json();
-        if (response.ok && result.data) {
-          setLocationTypes(result.data.location_types || []);
-          setLocations(result.data.locations || []);
-        }
+        // 🔥 HIT API: Ambil opsi lokasi (GET)
+        // Token otomatis ditempel oleh interceptor
+        const response = await api.get(`${API_BASE_URL}/form-options`, {
+          params: { site_id: siteId },
+        });
+
+        // Akses .data dari axios response
+        const result = response.data;
+        setLocationTypes(result.location_types || []);
+        setLocations(result.locations || []);
       } catch (err) {
         console.error(err);
       }
@@ -122,17 +131,22 @@ export const useCleaningForm = () => {
     data.append("end_time", formatTimeForGo(formData.end_time));
     data.append("image_before", formData.image_before);
     data.append("image_after", formData.image_after);
+    console.log(data);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/logs`, {
-        method: "POST",
-        body: data,
+      // 🔥 HIT API: Submit Form (POST)
+      // Header 'Content-Type': 'multipart/form-data' otomatis dihandle axios saat kirim FormData
+      const response = await api.post(`${API_BASE_URL}/logs`, data, {
+        headers: {
+          // Penting: Set ke "multipart/form-data" agar Axios tahu ini upload file
+          // Atau set undefined agar browser otomatis generate boundary
+          "Content-Type": "multipart/form-data",
+        },
       });
-      const result = await response.json();
 
-      if (!response.ok) throw new Error(result.error || "Gagal mengirim data.");
-
+      const result = response.data;
       setMessage(result.message || "Data berhasil disimpan!");
+
       setFormData((prev) => ({
         ...prev,
         location_name: "",
@@ -147,7 +161,7 @@ export const useCleaningForm = () => {
       const fileInputs = document.querySelectorAll('input[type="file"]');
       fileInputs.forEach((input) => (input.value = ""));
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
     }
