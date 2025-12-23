@@ -1,9 +1,20 @@
+// modules/HRD/menu.js
 export const hrdMenu = {
-  sectionTitle: "Human Resource",
-  roles: ["HRD"], // Menu ini hanya muncul untuk role HRD
-  items: [
-    { label: "Dashboard", path: "/hrd/dashboard" },
-    { label: "Monthly Report", path: "/hrd/monthlyreport" },
-    { label: "Cleaning Logs", path: "/hrd/cleaninglogs" },
+  mainTitle: "Human Resource", // Judul Utama (opsional)
+  roles: ["HRD"],
+  // Masukkan beberapa section di sini
+  sections: [
+    {
+      title: "Human Resource",
+      items: [
+        { label: "Dashboard", path: "/hrd/dashboard" },
+        { label: "Monthly Report", path: "/hrd/monthlyreport" },
+        { label: "Cleaning Logs", path: "/hrd/cleaninglogs" },
+      ],
+    },
+    {
+      title: "Kendaraan",
+      items: [{ label: "Kendaraan", path: "/hrd/kendaraan" }],
+    },
   ],
 };

@@ -11,6 +11,15 @@ const ROLE_MAPPING = {
   5: "PRODUKSI",
 };
 
+const Position_Mapping = {
+  1: "PROGRAMMER",
+  2: "SPV",
+  3: "STAF",
+  4: "CS",
+  5: "MANAGER",
+  6: "DRIVER",
+};
+
 const LoginPage = () => {
   const navigate = useNavigate();
 
@@ -25,6 +34,11 @@ const LoginPage = () => {
   const getRoleByDeptId = (id) => {
     const deptId = parseInt(id, 10);
     return ROLE_MAPPING[deptId] || "USER";
+  };
+
+  const getPositionByPostId = (id) => {
+    const postId = parseInt(id, 10);
+    return Position_Mapping[postId] || "USER";
   };
 
   // --- FUNGSI SIMPAN DATA ---
@@ -46,6 +60,7 @@ const LoginPage = () => {
       localStorage.setItem("siteId", String(userData.siteId || ""));
       localStorage.setItem("deptId", String(userData.deptId || ""));
       localStorage.setItem("userLogin", String(userData.username || ""));
+      localStorage.setItem("userPosition", String(userData.posId || ""));
     }
   };
 
@@ -67,12 +82,12 @@ const LoginPage = () => {
 
       // 2. DECODE TOKEN (DILAKUKAN DI SINI SEBELUM MENYIMPAN)
       const decoded = jwtDecode(access_token);
-      console.log("Decoded Token:", decoded);
 
       // 3. EKSTRAKSI DATA DARI TOKEN
       const deptId = decoded.dept_id || decoded.DeptID;
       const siteId = decoded.site_id || decoded.SiteID;
       const username = decoded.sub || decoded.username || decoded.name;
+      const posId = decoded.pos_id || decoded.posid;
 
       // Validasi kelengkapan data token
       if (!deptId || !siteId) {
@@ -83,6 +98,7 @@ const LoginPage = () => {
 
       // 4. TENTUKAN ROLE
       const userRole = getRoleByDeptId(deptId);
+      const userPos = getPositionByPostId(posId);
 
       // 5. BARU SIMPAN KE LOCAL STORAGE (Setelah semua variabel di atas terisi)
       saveAuthData(access_token, refresh_token, {
@@ -90,19 +106,10 @@ const LoginPage = () => {
         siteId: siteId, // Ini hasil dari langkah 3
         deptId: deptId, // Ini hasil dari langkah 3
         username: username || formData.username,
+        posId: userPos,
       });
 
-      console.log("Data Auth Tersimpan. Role:", userRole);
-
-      // 6. REDIRECT
-      const routes = {
-        IT: "/it/dashboard",
-        HRD: "/hrd/dashboard",
-        CS: "/hrd/cleaningform",
-        PRODUKSI: "/produksi/dashboard",
-      };
-
-      navigate(routes[userRole] || "/");
+      navigate("/", { replace: true });
     } catch (err) {
       console.error(err);
       setError(err.message || "Login gagal.");

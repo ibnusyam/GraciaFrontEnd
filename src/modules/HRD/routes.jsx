@@ -8,5 +8,6 @@ export const hrdRoutes = [
   { path: "hrd/dashboard", element: <DashboardHRD /> }, // Contoh nambah baru gampang
   { path: "hrd/monthlyreport", element: <MonthlyReport /> }, // Contoh nambah baru gampang
   { path: "hrd/cleaninglogs", element: <CleaningLogTable /> },
+  { path: "hrd/kendaraan", element: <div>kendaraan</div> },
   // { path: "hrd/cleaningform", element: <h1>Halaman Dashboard</h1> },
 ];

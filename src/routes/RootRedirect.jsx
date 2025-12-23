@@ -6,6 +6,7 @@ const RootRedirect = () => {
 
   // Ambil role dari LocalStorage
   const role = localStorage.getItem("userRole");
+  const position = localStorage.getItem("userPosition");
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -16,9 +17,11 @@ const RootRedirect = () => {
     case "IT":
       return <Navigate to="/it/dashboard" replace />;
     case "HRD":
-      return <Navigate to="/hrd/dashboard" replace />;
-    case "CS":
-      return <Navigate to="/hrd/cleaningform" replace />;
+      if (position === "CS") {
+        return <Navigate to="/hrd/cleaningform" replace />;
+      } else if (position === "SPV") {
+        return <Navigate to="/hrd/dashboard" replace />;
+      }
     case "PRODUKSI":
       return <Navigate to="/produksi/dashboard" replace />;
     default:

@@ -39,27 +39,44 @@ const Sidebar = () => {
 
       {/* Navigation Menu (DINAMIS) */}
       <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-        {/* Menu Umum (Bisa di hardcode atau dibuat config juga) */}
+        {appMenus.map((menu, index) => {
+          // Cek apakah user punya akses ke menu.roles
+          if (!menu.roles.includes(userRole)) return null;
 
-        {/* 🔥 LOOPING MENU BERDASARKAN CONFIG */}
-        {appMenus.map((menuSection, index) => {
-          // 1. Cek apakah Role user saat ini diizinkan melihat section ini
-          if (menuSection.roles.includes(userRole)) {
-            return (
-              <div key={index}>
-                {/* Render Judul Section (misal: IT DIVISION) */}
-                <div className="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  {menuSection.sectionTitle}
+          return (
+            <div key={index}>
+              {/* LOGIC A: Jika ada sections (Sub-grouping) */}
+              {menu.sections ? (
+                menu.sections.map((section, sIdx) => (
+                  <div key={sIdx}>
+                    {/* STYLING HEADER DARI CONTOH KE-2 */}
+                    <div className="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {section.title}
+                    </div>
+
+                    {/* Render Items */}
+                    {section.items.map((item, iIdx) => (
+                      <NavItem key={iIdx} to={item.path} label={item.label} />
+                    ))}
+                  </div>
+                ))
+              ) : (
+                /* LOGIC B: Fallback jika struktur langsung .items */
+                <div>
+                  {/* Opsional: Tampilkan judul menu utama jika ada, dengan style baru */}
+                  {menu.title && (
+                    <div className="px-4 py-2 mt-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {menu.title}
+                    </div>
+                  )}
+
+                  {menu.items.map((item, iIdx) => (
+                    <NavItem key={iIdx} to={item.path} label={item.label} />
+                  ))}
                 </div>
-
-                {/* Render Item di dalam section tersebut */}
-                {menuSection.items.map((item, idx) => (
-                  <NavItem key={idx} to={item.path} label={item.label} />
-                ))}
-              </div>
-            );
-          }
-          return null; // Jika role tidak cocok, jangan render apa-apa
+              )}
+            </div>
+          );
         })}
       </nav>
 

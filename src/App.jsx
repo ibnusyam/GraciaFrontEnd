@@ -3,7 +3,7 @@ import LoginPage from "./modules/auth/pages/LoginPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RootRedirect from "./routes/RootRedirect";
 import MainLayout from "./components/Layouts/MainLayout";
-import CSLayout from "./modules/CS/Pages/CleaningForm";
+import CSLayout from "./modules/HRD/Pages/CleaningForm";
 
 // 🔥 1. Import Config Routes dari masing-masing module
 import { hrdRoutes } from "./modules/HRD/routes";
@@ -15,8 +15,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* PUBLIC ROUTES */}
         <Route path="/login" element={<LoginPage />} />
+
+        <Route path="/" element={<RootRedirect />} />
 
         {/* ==================================================== */}
         {/* PROTECTED ROUTES - IT AREA */}
@@ -28,21 +29,22 @@ function App() {
             ))}
           </Route>
         </Route>
-        {/* ==================================================== */}
-        {/* PROTECTED ROUTES - CS */}
-        {/* ==================================================== */}
-        <Route element={<ProtectedRoute allowedDepartments={["CS"]} />}>
-          <Route path="/hrd/cleaningform" element={<CSLayout />} />
-        </Route>
 
         {/* ==================================================== */}
         {/* PROTECTED ROUTES - HRD AREA */}
         {/* ==================================================== */}
         <Route element={<ProtectedRoute allowedDepartments={["HRD"]} />}>
-          <Route element={<MainLayout />}>
-            {hrdRoutes.map((route, index) => (
-              <Route key={index} path={route.path} element={route.element} />
-            ))}
+          <Route element={<ProtectedRoute allowedPositions={["CS"]} />}>
+            <Route path="/hrd/cleaningform" element={<CSLayout />} />
+          </Route>
+
+          {/* KHUSUS SPV HRD */}
+          <Route element={<ProtectedRoute allowedPositions={["SPV"]} />}>
+            <Route element={<MainLayout />}>
+              {hrdRoutes.map((route, index) => (
+                <Route key={index} path={route.path} element={route.element} />
+              ))}
+            </Route>
           </Route>
         </Route>
 
@@ -57,8 +59,7 @@ function App() {
           </Route>
         </Route>
 
-        <Route path="/" element={<RootRedirect />} />
-
+        {/* 404 NOT FOUND */}
         <Route
           path="*"
           element={
