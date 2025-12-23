@@ -28,9 +28,11 @@ const getNullTime = (obj) => {
 const getImageUrl = (path) => {
   if (!path) return null;
   if (typeof path === "object" && path.Valid) {
+    console.log(`${API_BASE_URL}/${path}`);
     return `${API_BASE_URL}/${path.String}`;
   }
   if (typeof path === "string" && path !== "") {
+    console.log(`${API_BASE_URL}/${path}`);
     return `${API_BASE_URL}/${path}`;
   }
   return null;

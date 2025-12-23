@@ -63,6 +63,9 @@ const KendaraanList = () => {
                 Lokasi
               </th>
               <th className="py-3 px-4 border-b text-left text-sm font-semibold text-gray-600">
+                Waktu Input
+              </th>
+              <th className="py-3 px-4 border-b text-left text-sm font-semibold text-gray-600">
                 BBM
               </th>
               <th className="py-3 px-4 border-b text-left text-sm font-semibold text-gray-600">
@@ -89,6 +92,17 @@ const KendaraanList = () => {
                   <td className="py-3 px-4 border-b text-gray-600">
                     {/* Handle string kosong */}
                     {item.lokasi_sekarang ? item.lokasi_sekarang : "-"}
+                  </td>
+                  <td className="py-3 px-4 border-b text-gray-600">
+                    {item.waktu_input
+                      ? new Date(item.waktu_input).toLocaleString("id-ID", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "-"}
                   </td>
                   <td className="py-3 px-4 border-b text-gray-600">
                     {/* Handle string kosong */}

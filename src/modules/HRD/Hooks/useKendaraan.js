@@ -4,7 +4,6 @@ import api from "../../../api/axiosInstance"; // Sesuaikan path ke file axios in
 // Base URL Endpoint API
 const API_ENDPOINT = "/hrd-api";
 // Base URL untuk gambar (Root domain karena Nginx handle static file)
-const BASE_IMG_URL = "http://localhost";
 
 // --- HELPER FUNCTIONS (Diluar Hook) ---
 
@@ -14,7 +13,7 @@ const getImageUrl = (path) => {
   if (path.startsWith("http")) return path;
 
   // Jika path relatif (uploads/...), gabungkan dengan Base URL
-  return `${BASE_IMG_URL}${API_ENDPOINT}/${path}`;
+  return `${API_ENDPOINT}/${path}`;
 };
 
 const getNullString = (val) => {
