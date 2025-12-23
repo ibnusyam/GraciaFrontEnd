@@ -4,6 +4,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import RootRedirect from "./routes/RootRedirect";
 import MainLayout from "./components/Layouts/MainLayout";
 import CSLayout from "./modules/HRD/Pages/CleaningForm";
+import DriverLayout from "./modules/HRD/Pages/KendaraanInput";
 
 // 🔥 1. Import Config Routes dari masing-masing module
 import { hrdRoutes } from "./modules/HRD/routes";
@@ -36,6 +37,10 @@ function App() {
         <Route element={<ProtectedRoute allowedDepartments={["HRD"]} />}>
           <Route element={<ProtectedRoute allowedPositions={["CS"]} />}>
             <Route path="/hrd/cleaningform" element={<CSLayout />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedPositions={["DRIVER"]} />}>
+            <Route path="/hrd/inputkendaraan" element={<DriverLayout />} />
           </Route>
 
           {/* KHUSUS SPV HRD */}

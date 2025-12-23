@@ -120,6 +120,7 @@ export const useCleaningLogs = () => {
         });
 
         const result = response.data;
+        console.log(result);
         setLogs(result.data || []);
         setMeta(
           result.meta || { current_page: 1, total_pages: 1, total_records: 0 }

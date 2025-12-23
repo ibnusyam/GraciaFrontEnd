@@ -19,6 +19,8 @@ const RootRedirect = () => {
     case "HRD":
       if (position === "CS") {
         return <Navigate to="/hrd/cleaningform" replace />;
+      } else if (position === "DRIVER") {
+        return <Navigate to="/hrd/inputkendaraan" replace />;
       } else if (position === "SPV") {
         return <Navigate to="/hrd/dashboard" replace />;
       }
