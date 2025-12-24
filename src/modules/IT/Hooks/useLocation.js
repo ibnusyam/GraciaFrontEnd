@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../../../api/axiosInstance";
 
-// PENTING: Arahkan ke HRD API
 const API_BASE_URL = "/hrd-api";
 
 export const useLocationMaster = () => {

@@ -42,25 +42,23 @@ const KendaraanInput = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validasi sederhana
     if (!gambarFile) {
       alert("Silakan pilih gambar terlebih dahulu");
       return;
     }
 
-    // Bungkus ke dalam FormData (Wajib untuk upload file)
     const payload = new FormData();
     payload.append("nama_pengemudi", formData.nama_pengemudi);
     payload.append("model_mobil", formData.model_mobil);
-    payload.append("lokasi_sekarang", formData.lokasi_sekarang); // Sesuai key Postman kamu
+    payload.append("lokasi_sekarang", formData.lokasi_sekarang);
     payload.append("bbm", formData.bbm);
-    payload.append("gambar", gambarFile); // Key 'gambar' sesuai backend
+    payload.append("gambar", gambarFile);
 
     const success = await submitData(payload);
 
     if (success) {
       alert("Data berhasil disimpan!");
-      navigate("/"); // Kembali ke halaman list
+      navigate("/");
     }
   };
 

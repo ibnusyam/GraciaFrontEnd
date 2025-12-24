@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import api from "../../../api/axiosInstance"; // Gunakan instance Axios kita
+import api from "../../../api/axiosInstance";
 
 const API_BASE_URL = "/hrd-api";
 
@@ -28,11 +28,9 @@ const getNullTime = (obj) => {
 const getImageUrl = (path) => {
   if (!path) return null;
   if (typeof path === "object" && path.Valid) {
-    console.log(`${API_BASE_URL}/${path}`);
     return `${API_BASE_URL}/${path.String}`;
   }
   if (typeof path === "string" && path !== "") {
-    console.log(`${API_BASE_URL}/${path}`);
     return `${API_BASE_URL}/${path}`;
   }
   return null;
@@ -71,7 +69,6 @@ export const useCleaningLogs = () => {
     if (!siteId) return;
 
     try {
-      // 🔥 HIT API: Ambil Opsi Filter (GET)
       const response = await api.get(`${API_BASE_URL}/form-options`, {
         params: { site_id: siteId },
       });
@@ -81,9 +78,7 @@ export const useCleaningLogs = () => {
         locations: result.locations || [],
         types: result.location_types || [],
       });
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) {}
   }, []);
 
   const fetchData = useCallback(
@@ -107,22 +102,19 @@ export const useCleaningLogs = () => {
       }
 
       try {
-        // 🔥 HIT API: Ambil Logs Data (GET)
-        // Axios otomatis mengubah object params menjadi query string (?site_id=...&limit=...)
         const response = await api.get(`${API_BASE_URL}/logs`, {
           params: {
             site_id: siteId,
             location_id: locationId,
             location_type_id: typeId,
             cleaner_name: cleanerName,
-            date: date,
-            page: page,
-            limit: limit,
+            date,
+            page,
+            limit,
           },
         });
 
         const result = response.data;
-        console.log(result);
         setLogs(result.data || []);
         setMeta(
           result.meta || { current_page: 1, total_pages: 1, total_records: 0 }

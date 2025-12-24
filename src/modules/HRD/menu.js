@@ -1,8 +1,7 @@
 // modules/HRD/menu.js
 export const hrdMenu = {
-  mainTitle: "Human Resource", // Judul Utama (opsional)
+  mainTitle: "Human Resource",
   roles: ["HRD"],
-  // Masukkan beberapa section di sini
   sections: [
     {
       title: "Human Resource",

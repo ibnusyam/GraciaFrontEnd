@@ -1,21 +1,18 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useKendaraan } from "../Hooks/useKendaraan"; // Pastikan path import benar
+import { useKendaraan } from "../Hooks/useKendaraan";
 
 const KendaraanList = () => {
   const navigate = useNavigate();
 
-  // 1. Panggil Hook
   const { state, actions } = useKendaraan();
   const { data, loading, error, meta } = state;
   const { fetchData, getImageUrl } = actions;
 
-  // 2. Load data saat komponen pertama kali muncul
   useEffect(() => {
     fetchData(); // Default page 1
   }, [fetchData]);
 
-  // 3. Render Loading atau Error
   if (loading && data.length === 0) {
     return <div className="p-4 text-center">Loading data...</div>;
   }
@@ -90,7 +87,6 @@ const KendaraanList = () => {
                     {item.model_mobil}
                   </td>
                   <td className="py-3 px-4 border-b text-gray-600">
-                    {/* Handle string kosong */}
                     {item.lokasi_sekarang ? item.lokasi_sekarang : "-"}
                   </td>
                   <td className="py-3 px-4 border-b text-gray-600">
@@ -105,9 +101,7 @@ const KendaraanList = () => {
                       : "-"}
                   </td>
                   <td className="py-3 px-4 border-b text-gray-600">
-                    {/* Handle string kosong */}
                     {item.bbm ? item.bbm : "-"}
-                    {/* {item.gambar_url} */}
                   </td>
                   <td className="py-3 px-4 border-b">
                     {item.gambar_url ? (
@@ -127,7 +121,6 @@ const KendaraanList = () => {
         </table>
       </div>
 
-      {/* --- PAGINATION SIMPLE (Opsional) --- */}
       <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
         <div>Total Records: {meta.total_records || 0}</div>
         <div className="flex gap-2">

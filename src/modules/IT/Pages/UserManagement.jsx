@@ -58,7 +58,6 @@ const UserManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Konversi string ke int untuk ID agar Golang tidak error Atoi
     const payload = {
       ...formData,
       department_id: formData.department_id
@@ -67,8 +66,6 @@ const UserManagement = () => {
       position_id: formData.position_id ? parseInt(formData.position_id) : null,
       site_id: formData.site_id ? parseInt(formData.site_id) : null,
     };
-
-    // Hapus password dari payload jika edit & kosong (agar tidak kereset jadi string kosong)
     if (isEditMode && !payload.password) {
       delete payload.password;
     }

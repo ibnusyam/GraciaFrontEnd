@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
+import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useCleaningForm } from "../Hooks/useCleaningForm";
@@ -30,7 +30,7 @@ const customDatePickerStyle = `
 `;
 
 export function CleaningForm() {
-  const navigate = useNavigate(); // 2. Inisialisasi navigate
+  const navigate = useNavigate();
   const { state, actions } = useCleaningForm();
   const { formData, loading, message, error, locationTypes, locations } = state;
   const { handleChange, handleFileChange, handleSubmit, setFormData } = actions;

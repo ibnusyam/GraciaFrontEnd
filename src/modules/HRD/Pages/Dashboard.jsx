@@ -2,14 +2,12 @@ import React from "react";
 import { useCleanerPerformance } from "../Hooks/useDashboard";
 
 export function CleanerPerformanceTable() {
-  // Ambil siteId dari localStorage (konsisten dengan logic Form kamu)
   const siteId = localStorage.getItem("siteId");
 
   const { state, actions } = useCleanerPerformance(siteId);
   const { cleaners, loading, error, filter, months, totals } = state;
   const { handleFilterChange } = actions;
 
-  // Helper format menit ke Jam & Menit
   const formatTime = (totalMin) => {
     const m = Math.round(totalMin || 0);
     const h = Math.floor(m / 60);

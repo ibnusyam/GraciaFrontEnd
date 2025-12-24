@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import api from "../../../api/axiosInstance"; // Gunakan instance Axios kita
+import api from "../../../api/axiosInstance";
 
 const API_BASE_URL = "/hrd-api";
 
@@ -33,7 +33,6 @@ export const useCleanerPerformance = (siteId) => {
     setLoading(true);
     setError(null);
     try {
-      // 🔥 HIT API: Dashboard Stats (GET)
       const res = await api.get(`${API_BASE_URL}/dashboard/stats`, {
         params: {
           site_id: siteId,
@@ -43,7 +42,6 @@ export const useCleanerPerformance = (siteId) => {
       });
       setCleaners(res.data.data || []);
     } catch (e) {
-      console.error("Gagal memuat data performa:", e);
       setError("Gagal mengambil data dari server.");
       setCleaners([]);
     } finally {

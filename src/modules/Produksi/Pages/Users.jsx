@@ -1,29 +1,19 @@
-// src/modules/users/pages/Users.jsx
 import {
   UserCircleIcon,
   TrashIcon,
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
-
-// Import Custom Hook
-import { useUsers } from "../Hooks/useUsers"; // Sesuaikan path
+import { useUsers } from "../Hooks/useUsers";
 
 export function Users() {
-  // Panggil Logic
   const { state, actions } = useUsers();
-
-  // Destructure State
   const { users, loading, error, showModal, creating, formData } = state;
-
-  // Destructure Actions
   const { setShowModal, handleDelete, handleCreate, handleChange } = actions;
 
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12 relative">
-      {/* Card Container */}
       <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
-        {/* Card Header dengan Tombol Tambah */}
         <div className="relative bg-clip-border mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-gray-900 to-gray-800 text-white shadow-gray-900/20 shadow-lg -mt-6 mb-8 p-6 flex justify-between items-center">
           <h6 className="block antialiased tracking-normal font-sans text-base font-semibold leading-relaxed text-white">
             Daftar Pengguna
@@ -37,7 +27,6 @@ export function Users() {
           </button>
         </div>
 
-        {/* Card Body (Table) */}
         <div className="p-6 overflow-x-scroll px-0 pt-0 pb-2">
           <table className="w-full min-w-[640px] table-auto">
             <thead>
@@ -95,7 +84,6 @@ export function Users() {
                       </td>
                       <td className={className}>
                         <div className="flex items-center justify-between pr-4">
-                          {/* Informasi Nama */}
                           <div className="flex items-center gap-4">
                             <UserCircleIcon className="h-8 w-8 text-gray-400" />
                             <div>
@@ -108,7 +96,6 @@ export function Users() {
                             </div>
                           </div>
 
-                          {/* Tombol Hapus */}
                           <button
                             onClick={() => handleDelete(id)}
                             className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
@@ -136,11 +123,9 @@ export function Users() {
         </div>
       </div>
 
-      {/* MODAL CREATE USER */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
-            {/* Modal Header */}
             <div className="bg-gray-900 text-white p-4 flex justify-between items-center">
               <h3 className="font-semibold text-lg">Tambah Pengguna Baru</h3>
               <button
@@ -151,7 +136,6 @@ export function Users() {
               </button>
             </div>
 
-            {/* Modal Form */}
             <form onSubmit={handleCreate} className="p-6 flex flex-col gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -196,7 +180,7 @@ export function Users() {
                   disabled={creating}
                   className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-70 flex items-center gap-2"
                 >
-                  {creating ? <>Processing...</> : <>Simpan</>}
+                  {creating ? "Processing..." : "Simpan"}
                 </button>
               </div>
             </form>

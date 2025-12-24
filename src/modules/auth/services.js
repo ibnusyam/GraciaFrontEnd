@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// URL Backend Auth
 const AUTH_API_URL = "/auth-api";
 
 export const loginAPI = async (username, password) => {
@@ -9,9 +8,8 @@ export const loginAPI = async (username, password) => {
       username,
       password,
     });
-    return response.data; // Mengembalikan full response object dari backend
+    return response.data;
   } catch (error) {
-    // Tangkap error response dari server atau network error
     const message =
       error.response?.data?.message || "Terjadi kesalahan pada koneksi server.";
     throw new Error(message);

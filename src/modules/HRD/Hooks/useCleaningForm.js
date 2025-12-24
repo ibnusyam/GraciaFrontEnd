@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import imageCompression from "browser-image-compression";
-import api from "../../../api/axiosInstance"; // Gunakan instance Axios kita
+import api from "../../../api/axiosInstance";
 
 const API_BASE_URL = "/hrd-api";
 
@@ -26,24 +26,19 @@ export const useCleaningForm = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       const siteId = localStorage.getItem("siteId");
-
       if (!siteId) return;
 
       try {
-        // 🔥 HIT API: Ambil opsi lokasi (GET)
-        // Token otomatis ditempel oleh interceptor
         const response = await api.get(`${API_BASE_URL}/form-options`, {
           params: { site_id: siteId },
         });
 
-        // Akses .data dari axios response
         const result = response.data;
         setLocationTypes(result.location_types || []);
         setLocations(result.locations || []);
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) {}
     };
+
     fetchOptions();
   }, []);
 
@@ -91,6 +86,7 @@ export const useCleaningForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (isCompressing) {
       setError("Gambar masih diproses...");
       return;
@@ -131,15 +127,10 @@ export const useCleaningForm = () => {
     data.append("end_time", formatTimeForGo(formData.end_time));
     data.append("image_before", formData.image_before);
     data.append("image_after", formData.image_after);
-    console.log(data);
 
     try {
-      // 🔥 HIT API: Submit Form (POST)
-      // Header 'Content-Type': 'multipart/form-data' otomatis dihandle axios saat kirim FormData
       const response = await api.post(`${API_BASE_URL}/logs`, data, {
         headers: {
-          // Penting: Set ke "multipart/form-data" agar Axios tahu ini upload file
-          // Atau set undefined agar browser otomatis generate boundary
           "Content-Type": "multipart/form-data",
         },
       });
@@ -177,6 +168,11 @@ export const useCleaningForm = () => {
       locations,
       isCompressing,
     },
-    actions: { handleChange, handleFileChange, handleSubmit, setFormData },
+    actions: {
+      handleChange,
+      handleFileChange,
+      handleSubmit,
+      setFormData,
+    },
   };
 };

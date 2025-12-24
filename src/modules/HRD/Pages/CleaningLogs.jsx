@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useCleaningLogs } from "../Hooks/useCleaningLogs";
 
 const CleaningLogTable = () => {
-  // 1. Panggil Logic dari Hook
   const { state, actions } = useCleaningLogs();
   const { logs, meta, filterOptions, loading, error } = state;
   const {
@@ -14,13 +13,11 @@ const CleaningLogTable = () => {
     calculateDuration,
   } = actions;
 
-  // --- HELPER DATE ---
   const getCurrentMonth = () => {
     const month = new Date().getMonth() + 1;
     return month < 10 ? `0${month}` : `${month}`;
   };
 
-  // 2. State UI
   const [filterMonth, setFilterMonth] = useState(getCurrentMonth());
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -28,7 +25,6 @@ const CleaningLogTable = () => {
   const [searchCleaner, setSearchCleaner] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // --- LOGIC FILTER DROPDOWN (View Logic) ---
   const filteredLocations = useMemo(() => {
     const allLocations = filterOptions.locations || [];
     if (!selectedType) return allLocations;
@@ -37,7 +33,6 @@ const CleaningLogTable = () => {
     );
   }, [selectedType, filterOptions.locations]);
 
-  // --- EFFECT: Trigger Fetch Data ---
   useEffect(() => {
     let dateParam = "";
     if (filterYear) {
@@ -67,14 +62,8 @@ const CleaningLogTable = () => {
     fetchData,
   ]);
 
-  // --- FILTER SAFETY NET (CLIENT SIDE) ---
-  // Penjelasan: Ini adalah filter "paksa" di sisi tampilan.
-  // Meskipun API mengembalikan data Toilet, jika selectedType adalah Locker,
-  // maka data Toilet akan dibuang di sini sebelum di-render.
   const displayedLogs = logs.filter((log) => {
-    // 1. Safety check untuk Type
     if (selectedType) {
-      // Pastikan log punya location_type_id, jika tidak ada kita loloskan saja (atau hide)
       if (
         log.location_type_id &&
         String(log.location_type_id) !== String(selectedType)
@@ -82,7 +71,6 @@ const CleaningLogTable = () => {
         return false;
       }
     }
-    // 2. Safety check untuk Location (Opsional tapi bagus untuk konsistensi)
     if (selectedLocation) {
       if (
         log.location_id &&
@@ -94,7 +82,6 @@ const CleaningLogTable = () => {
     return true;
   });
 
-  // --- HANDLER: Reset Filter ---
   const handleResetFilter = () => {
     setSelectedLocation("");
     setSelectedType("");
@@ -205,7 +192,6 @@ const CleaningLogTable = () => {
               ))}
             </select>
 
-            {/* SELECT TYPE */}
             <select
               value={selectedType}
               onChange={(e) => {
@@ -230,7 +216,6 @@ const CleaningLogTable = () => {
               )}
             </select>
 
-            {/* SELECT LOCATION */}
             <select
               value={selectedLocation}
               onChange={(e) => {

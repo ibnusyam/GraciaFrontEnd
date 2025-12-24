@@ -19,7 +19,6 @@ export const useUsers = () => {
     setLoading(true);
     try {
       const response = await api.get(`${API_BASE_URL}/users`);
-
       const result = response.data.data || response.data;
 
       if (Array.isArray(result)) {
@@ -29,7 +28,6 @@ export const useUsers = () => {
       }
       setError(null);
     } catch (err) {
-      console.error(err);
       setUsers([]);
       setError(null);
     } finally {
@@ -46,11 +44,9 @@ export const useUsers = () => {
 
     try {
       await api.delete(`${API_BASE_URL}/users/${id}`);
-
       setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== id));
       alert("Pengguna berhasil dihapus!");
     } catch (err) {
-      console.error(err);
       alert("Terjadi kesalahan saat menghubungi server.");
     }
   };
@@ -81,7 +77,6 @@ export const useUsers = () => {
       setFormData({ nik: "", full_name: "" });
       fetchUsers();
     } catch (err) {
-      console.error(err);
       alert("Gagal membuat pengguna baru.");
     } finally {
       setCreating(false);

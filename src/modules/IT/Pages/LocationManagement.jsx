@@ -5,19 +5,14 @@ const LocationManagement = () => {
   const { state, actions } = useLocationMaster();
   const { types, locations, loading, error } = state;
 
-  // --- FILTER STATE ---
-  // Default pilih ID 1 (Gracia Pabrik) agar tampilan awal tidak kosong/campur
   const [selectedSiteId, setSelectedSiteId] = useState(1);
 
-  // Tab: 'types' or 'locations'
   const [activeTab, setActiveTab] = useState("types");
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentId, setCurrentId] = useState(null);
 
-  // Form State
   const [formData, setFormData] = useState({
     type_name: "",
     description: "",
@@ -26,21 +21,17 @@ const LocationManagement = () => {
     location_type_id: "",
   });
 
-  // --- MAPPING SITE ---
   const SITE_OPTIONS = [
     { id: 1, name: "Gracia Pabrik" },
     { id: 2, name: "Head Office" },
     { id: 3, name: "Baranang" },
   ];
 
-  // Helper Display Name
   const getSiteName = (id) => {
     const site = SITE_OPTIONS.find((s) => s.id === parseInt(id));
     return site ? site.name : `Site ID: ${id}`;
   };
 
-  // --- DATA FILTERING (LOGIC UTAMA) ---
-  // Kita filter data dari Hook berdasarkan Site ID yang dipilih user
   const filteredTypes = useMemo(() => {
     return types.filter((t) => t.site_id === selectedSiteId);
   }, [types, selectedSiteId]);
@@ -49,14 +40,11 @@ const LocationManagement = () => {
     return locations.filter((l) => l.site_id === selectedSiteId);
   }, [locations, selectedSiteId]);
 
-  // --- HANDLERS ---
-
   const openCreate = () => {
     setIsEditMode(false);
     setFormData({
       type_name: "",
       description: "",
-      // 🔥 Auto-fill Site ID sesuai filter yang sedang aktif
       site_id: selectedSiteId,
       location_name: "",
       location_type_id: "",
@@ -235,7 +223,6 @@ const LocationManagement = () => {
         </div>
       )}
 
-      {/* --- TAB CONTENT: LOCATIONS --- */}
       {activeTab === "locations" && (
         <div className="bg-white shadow rounded overflow-hidden">
           <table className="min-w-full leading-normal">
@@ -287,7 +274,6 @@ const LocationManagement = () => {
         </div>
       )}
 
-      {/* --- MODAL FORM --- */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-96">
@@ -303,7 +289,6 @@ const LocationManagement = () => {
             </p>
 
             <form onSubmit={handleSubmit}>
-              {/* Input Khusus TYPE */}
               {activeTab === "types" && (
                 <>
                   <div className="mb-3">
@@ -334,7 +319,6 @@ const LocationManagement = () => {
                 </>
               )}
 
-              {/* Input Khusus LOCATION */}
               {activeTab === "locations" && (
                 <>
                   <div className="mb-3">
@@ -362,7 +346,6 @@ const LocationManagement = () => {
                       required
                     >
                       <option value="">-- Pilih Tipe --</option>
-                      {/* 🔥 Dropdown hanya menampilkan Tipe milik Site yang sedang dipilih */}
                       {filteredTypes.map((t) => (
                         <option
                           key={t.location_type_id}
@@ -376,7 +359,6 @@ const LocationManagement = () => {
                 </>
               )}
 
-              {/* SITE ID (Hidden or Readonly) - Kita buat Disabled agar user tau ini masuk kemana tapi gabisa ganti sembarangan */}
               <div className="mb-4">
                 <label className="block text-sm font-bold mb-1">Site</label>
                 <select
@@ -384,7 +366,7 @@ const LocationManagement = () => {
                   name="site_id"
                   value={formData.site_id}
                   onChange={handleChange}
-                  disabled // 🔥 User tidak bisa ganti site di sini, harus ganti filter di atas
+                  disabled
                   required
                 >
                   {SITE_OPTIONS.map((site) => (

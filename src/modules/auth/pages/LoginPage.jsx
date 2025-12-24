@@ -41,20 +41,16 @@ const LoginPage = () => {
     return Position_Mapping[postId] || "USER";
   };
 
-  // --- FUNGSI SIMPAN DATA ---
-  // Fungsi ini HANYA dipanggil setelah data (userData) sudah siap/terdecode
   const saveAuthData = (accessToken, refreshToken, userData) => {
-    // 1. Simpan Token di Cookies
     const cookieOptions = {
       secure: window.location.protocol === "https:",
       sameSite: "Strict",
       expires: 1,
     };
+
     Cookies.set("accessToken", accessToken, cookieOptions);
     Cookies.set("refreshToken", refreshToken, { ...cookieOptions, expires: 7 });
 
-    // 2. Simpan Info User di LocalStorage
-    // Pastikan userData tidak undefined sebelum disimpan
     if (userData) {
       localStorage.setItem("userRole", String(userData.role || ""));
       localStorage.setItem("siteId", String(userData.siteId || ""));
@@ -70,9 +66,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      // 1. REQUEST LOGIN
       const apiResponse = await loginAPI(formData.username, formData.password);
-
       const payload = apiResponse?.data || apiResponse;
       const { access_token, refresh_token } = payload;
 
@@ -80,38 +74,32 @@ const LoginPage = () => {
         throw new Error("Token tidak diterima dari server.");
       }
 
-      // 2. DECODE TOKEN (DILAKUKAN DI SINI SEBELUM MENYIMPAN)
       const decoded = jwtDecode(access_token);
 
-      // 3. EKSTRAKSI DATA DARI TOKEN
       const deptId = decoded.dept_id || decoded.DeptID;
       const siteId = decoded.site_id || decoded.SiteID;
       const username = decoded.sub || decoded.username || decoded.name;
       const posId = decoded.pos_id || decoded.posid;
 
-      // Validasi kelengkapan data token
       if (!deptId || !siteId) {
         throw new Error(
           "Data User (DeptID/SiteID) tidak lengkap di dalam token."
         );
       }
 
-      // 4. TENTUKAN ROLE
       const userRole = getRoleByDeptId(deptId);
       const userPos = getPositionByPostId(posId);
 
-      // 5. BARU SIMPAN KE LOCAL STORAGE (Setelah semua variabel di atas terisi)
       saveAuthData(access_token, refresh_token, {
-        role: userRole, // Ini hasil dari langkah 4
-        siteId: siteId, // Ini hasil dari langkah 3
-        deptId: deptId, // Ini hasil dari langkah 3
+        role: userRole,
+        siteId,
+        deptId,
         username: username || formData.username,
         posId: userPos,
       });
 
       navigate("/", { replace: true });
     } catch (err) {
-      console.error(err);
       setError(err.message || "Login gagal.");
     } finally {
       setIsLoading(false);
