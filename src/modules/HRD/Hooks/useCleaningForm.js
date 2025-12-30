@@ -55,7 +55,7 @@ export const useCleaningForm = () => {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        initialQuality: 0.4,
+        initialQuality: 0.1,
       };
 
       try {

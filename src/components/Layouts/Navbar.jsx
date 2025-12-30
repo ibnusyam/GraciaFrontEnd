@@ -4,8 +4,8 @@ const Navbar = () => {
   const userLogin = localStorage.getItem("userLogin");
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-6 z-10">
-      {/* Left Side: Page Title / Breadcrumb */}
+    <header className="h-16 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between pr-6 pl-16 md:px-6 z-10 transition-all duration-200">
+      {/* Left Side: Page Title */}
       <div>
         <h2 className="text-lg font-semibold text-gray-700">
           Dashboard <span className="text-blue-600">{role}</span>
